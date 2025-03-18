@@ -38,17 +38,41 @@
     </div>
 
     <script>
-        const mirrors = [
-            { name: "WiiMart Mirror 1 GitHub", url: "https://wiimart.mirror1.errexe.xyz" },
-            { name: "WiiMart Mirror 2 Cloudflare", url: "https://wiimart.mirror5.errexe.xyz" },
-            { name: "WiiMart Mirror 3 GitLab", url: "https://test1-c99ff4.gitlab.io" },
-            { name: "WiiMart Mirror 4 Netlify", url: "https://wiimart.netlify.errexe.xyz" },
-            { name: "WiiMart Mirror 5 ReviveTube API", url: "https://api.errexe.xyz/mirror4/wiimart" }
-        ];
+    const mirrors = [
+        { name: "WiiMart Mirror 1 GitHub", url: "https://wiimart.mirror1.errexe.xyz" },
+        { name: "WiiMart Mirror 2 Cloudflare", url: "https://wiimart.mirror5.errexe.xyz" },
+        { name: "WiiMart Mirror 3 GitLab", url: "https://test1-c99ff4.gitlab.io" },
+        { name: "WiiMart Mirror 4 Netlify", url: "https://wiimart.netlify.errexe.xyz" },
+        { name: "WiiMart Mirror 5 ReviveTube API", url: "https://api.errexe.xyz/mirror4/wiimart" }
+    ];
 
-        const mirrorList = document.getElementById("mirror-list");
+    const mirrorList = document.getElementById("mirror-list");
 
-        mirrors.forEach((mirror, index) => {
+
+    async function testSpeed(baseUrl, index) {
+        const testUrl = `${baseUrl}/speedtest.txt?nocache=${Date.now()}`;
+        const startTime = performance.now();
+
+        try {
+            const response = await fetch(testUrl, { method: "GET", cache: "no-cache" });
+            const text = await response.text();
+            const endTime = performance.now();
+
+            const duration = (endTime - startTime) / 1000;
+            const fileSize = 15;
+            const speed = (fileSize / duration).toFixed(2);
+
+            document.getElementById(`speed-${index}`).textContent = `${speed} MB/s`;
+        } catch (error) {
+            document.getElementById(`speed-${index}`).textContent = "Failed";
+        }
+    }
+
+
+    async function runTestsSequentially() {
+        for (let index = 0; index < mirrors.length; index++) {
+            const mirror = mirrors[index];
+
             const row = document.createElement("tr");
             row.innerHTML = `
                 <td>${index + 1}</td>
@@ -59,27 +83,14 @@
             `;
             mirrorList.appendChild(row);
 
-            testSpeed(mirror.url, index);
-        });
 
-        function testSpeed(baseUrl, index) {
-            const testUrl = `${baseUrl}/speedtest.txt?nocache=${Date.now()}`;
-            const startTime = performance.now();
-
-            fetch(testUrl, { method: "GET", cache: "no-cache" })
-                .then(response => response.text())
-                .then(text => {
-                    const endTime = performance.now();
-                    const duration = (endTime - startTime) / 1000; // in Sekunden
-                    const fileSize = 15; // MB (angenommene Größe von speedtest.txt)
-                    const speed = (fileSize / duration).toFixed(2); // MB/s
-                    document.getElementById(`speed-${index}`).textContent = `${speed} MB/s`;
-                })
-                .catch(error => {
-                    document.getElementById(`speed-${index}`).textContent = "Failed";
-                });
+            await testSpeed(mirror.url, index);
         }
-    </script>
+    }
+
+
+    runTestsSequentially();
+</script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
